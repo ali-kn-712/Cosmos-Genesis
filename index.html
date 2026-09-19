@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmos Genesis | Link Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        /* Background Video */
+        .bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        /* Dark overlay for better readability */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: -1;
+        }
+
+        /* Main container */
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+
+        /* Header section (Logo & Name) */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .profile-logo {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            margin-bottom: 15px;
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Links list layout */
+        .links-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Individual link card styling */
+        .link-card {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            padding: 14px 18px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .link-card:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Card icon/logo */
+        .card-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Card title text */
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 500;
+            text-align: left;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Video File -->
+    <video autoplay muted loop class="bg-video">
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+    </video>
+    
+    <div class="overlay"></div>
+
+    <div class="container">
+        <!-- Header: Logo & Channel Name -->
+        <div class="profile-header">
+            <img src="main-logo.png" alt="Logo" class="profile-logo">
+            <h1 class="profile-name">Cosmos Genesis</h1>
+        </div>
+
+        <!-- Links Cards -->
+        <div class="links-container">
+            
+            <!-- Card 1 -->
+            <a href="https://youtube.com/@yourchannel" target="_blank" class="link-card">
+                <img src="icon1.png" alt="Icon" class="card-icon">
+                <span class="card-title">YouTube Channel</span>
+            </a>
+
+            <!-- Card 2 -->
+            <a href="https://t.me/yourchannel" target="_blank" class="link-card">
+                <img src="icon2.png" alt="Icon" class="card-icon">
+                <span class="card-title">Telegram Community</span>
+            </a>
+
+            <!-- Card 3 -->
+            <a href="https://instagram.com/yourhandle" target="_blank" class="link-card">
+                <img src="icon3.png" alt="Icon" class="card-icon">
+                <span class="card-title">Instagram Updates</span>
+            </a>
+
+        </div>
+    </div>
+
+</body>
+</html>

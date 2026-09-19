@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Cosmos Genesis</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background: #121212; color: #fff; display: flex; justify-content: center; padding: 40px 20px; }
+        .panel { width: 100%; max-width: 500px; background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { margin-bottom: 20px; font-size: 1.5rem; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #bbb; }
+        input { width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 6px; }
+        button { width: 100%; padding: 12px; background: #4f46e5; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #4338ca; }
+        hr { border: 0; border-top: 1px solid #333; margin: 20px 0; }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #888; text-decoration: none; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <h2>Admin Panel</h2>
+        <form id="adminForm">
+            <div class="form-group">
+                <label>Channel / Brand Name</label>
+                <input type="text" id="pName" value="Cosmos Genesis">
+            </div>
+            <div class="form-group">
+                <label>Main Logo URL (Image Link)</label>
+                <input type="text" id="pLogo" placeholder="https://.../logo.png">
+            </div>
+            <div class="form-group">
+                <label>Background Video URL (Video Link)</label>
+                <input type="text" id="pVideo" placeholder="https://.../video.mp4">
+            </div>
+
+            <hr>
+            <h3>Link 1</h3>
+            <div class="form-group"><label>Title</label><input type="text" id="l1Title" value="YouTube Channel"></div>
+            <div class="form-group"><label>URL</label><input type="text" id="l1Url" value="https://youtube.com"></div>
+            <div class="form-group"><label>Icon Image URL</label><input type="text" id="l1Icon" placeholder="https://.../icon1.png"></div>
+
+            <hr>
+            <h3>Link 2</h3>
+            <div class="form-group"><label>Title</label><input type="text" id="l2Title" value="Telegram Community"></div>
+            <div class="form-group"><label>URL</label><input type="text" id="l2Url" value="https://t.me"></div>
+            <div class="form-group"><label>Icon Image URL</label><input type="text" id="l2Icon" placeholder="https://.../icon2.png"></div>
+
+            <hr>
+            <h3>Link 3</h3>
+            <div class="form-group"><label>Title</label><input type="text" id="l3Title" value="Instagram Updates"></div>
+            <div class="form-group"><label>URL</label><input type="text" id="l3Url" value="https://instagram.com"></div>
+            <div class="form-group"><label>Icon Image URL</label><input type="text" id="l3Icon" placeholder="https://.../icon3.png"></div>
+
+            <button type="submit">Save Changes</button>
+        </form>
+        <a href="index.html" class="administered back-link">← Back to Site</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('adminForm');
+        
+        // Load existing saved data into form if exists
+        const saved = localStorage.getItem('siteData');
+        if(saved) {
+            const data = JSON.parse(saved);
+            if(data.profileName) document.getElementById('pName').value = data.profileName;
+            if(data.mainLogo) document.getElementById('pLogo').value = data.mainLogo;
+            if(data.bgVideo) document.getElementById('pVideo').value = data.bgVideo;
+            if(data.links) {
+                if(data.links[0]) { document.getElementById('l1Title').value = data.links[0].title; document.getElementById('l1Url').value = data.links[0].url; document.getElementById('l1Icon').value = data.links[0].icon; }
+                if(data.links[1]) { document.getElementById('l2Title').value = data.links[1].title; document.getElementById('l2Url').value = data.links[1].url; document.getElementById('l2Icon').value = data.links[1].icon; }
+                if(data.links[2]) { document.getElementById('l3Title').value = data.links[2].title; document.getElementById('l3Url').value = data.links[2].url; document.getElementById('l3Icon').value = data.links[2].init || data.links[2].icon; }
+            }
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = {
+                profileName: document.getElementById('pName').value,
+                mainLogo: document.getElementById('pLogo').value,
+                bgVideo: document.getElementById('pVideo').value,
+                links: [
+                    { title: document.getElementById('l1Title').value, url: document.getElementById('l1Url').value, icon: document.getElementById('l1Icon').value },
+                    { title: document.getElementById('l2Title').value, url: document.getElementById('l2Url').value, icon: document.getElementById('l2Icon').value },
+                    { title: document.getElementById('l3Title').value, url: document.getElementById('l3Url').value, icon: document.getElementById('l3Icon').value }
+                ]
+            };
+            localStorage.setItem('siteData', JSON.stringify(data));
+            alert('Settings saved successfully!');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
