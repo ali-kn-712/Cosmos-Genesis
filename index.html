@@ -110,65 +110,28 @@
 <body>
 
     <video id="bg-video" autoplay muted loop playsinline>
-        <source src="" type="video/mp4">
-        Your browser does not support video playback.
+        <source src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/16800960%201920%201080%2024fps(1).mp4" type="video/mp4">
     </video>
 
     <div class="container">
         <div class="logo-container">
-            <img id="main-logo" src="" alt="Logo">
+            <img src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/Cosmos%20Genesis%20Logo%20With%20Black%20Circle%20BG.png" alt="Logo">
         </div>
 
-        <div id="links-container" class="links-list"></div>
+        <div class="links-list">
+            <a href="https://www.youtube.com/@CosmosGenesis" class="link-card" target="_blank" rel="noopener noreferrer">
+                <img src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/YT%20-%20Circle.png" alt="YouTube" class="link-icon">
+                <span class="link-title">YouTube Channel</span>
+            </a>
+            <a href="https://www.instagram.com/cosmos_genesis/" class="link-card" target="_blank" rel="noopener noreferrer">
+                <img src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/IG%20-%20Circle.png" alt="Instagram" class="link-icon">
+                <span class="link-title">Instagram Page</span>
+            </a>
+            <a href="https://twitter.com/AliknspaceR" class="link-card" target="_blank" rel="noopener noreferrer">
+                <img src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/X%20-%20Circle.png" alt="X" class="link-icon">
+                <span class="link-title">X Profile</span>
+            </a>
+        </div>
     </div>
-
-    <script>
-        const BIN_ID = "6aae87cbac6210605adfc8fc";
-        const API_KEY = "$2a$10$Gd1pKq9Z6WI5F4uRk496UubcSkwJTAznwMcQEDYBgiSRCDyzaYLw.";
-
-        async function loadSiteData() {
-            try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { "X-Master-Key": API_KEY }
-                });
-                const result = await response.json();
-                const data = result.record;
-
-                const videoElement = document.getElementById('bg-video');
-                const sourceElement = videoElement.querySelector('source');
-                if (data.bgVideo) {
-                    sourceElement.src = data.bgVideo;
-                    videoElement.load();
-                }
-
-                if (data.logoUrl) {
-                    document.getElementById('main-logo').src = data.logoUrl;
-                }
-
-                const container = document.getElementById('links-container');
-                container.innerHTML = '';
-
-                if (data.links && Array.isArray(data.links)) {
-                    data.links.forEach(link => {
-                        const a = document.createElement('a');
-                        a.href = link.url;
-                        a.className = 'link-card';
-                        a.target = '_blank';
-                        a.rel = 'noopener noreferrer';
-
-                        a.innerHTML = `
-                            <img src="${link.icon}" alt="${link.title}" class="link-icon">
-                            <span class="link-title">${link.title}</span>
-                        `;
-                        container.appendChild(a);
-                    });
-                }
-            } catch (error) {
-                console.error("Error loading data:", error);
-            }
-        }
-
-        loadSiteData();
-    </script>
 </body>
 </html>
