@@ -23,15 +23,31 @@
             position: relative;
         }
 
-        #bg-image {
+        /* Background Slider Styling with Fade Effect */
+        .bg-slider {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            object-fit: cover;
             z-index: -1;
+            background-color: #0b0f19;
+        }
+
+        .bg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             filter: brightness(0.4);
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        .bg-slide.active {
+            opacity: 1;
         }
 
         .container {
@@ -118,7 +134,10 @@
 </head>
 <body>
 
-    <img id="bg-image" src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/Cosmos%20Genesis%20Logo%20With%20Black%20Circle%20BG.png" alt="Background">
+    <!-- Background Slider Container -->
+    <div class="bg-slider" id="slider">
+        <!-- Images will be dynamically loaded and faded via JS -->
+    </div>
 
     <div class="container">
         <div class="logo-container">
@@ -128,7 +147,7 @@
         <h1 class="brand-title">Cosmos Genesis</h1>
 
         <div class="links-list">
-            <a href="https://www.youtube.com/@CosmosGenesis" class="link-card" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.youtube.com/@https://www.youtube.com/channel/UCxGNtMi_cJDLrhdA0ckl5aQ?sub_confirmation=1" class="link-card" target="_blank" rel="noopener noreferrer">
                 <img src="https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/YT%20-%20Circle.png" alt="YouTube" class="link-icon">
                 <span class="link-title">YouTube Channel</span>
             </a>
@@ -142,5 +161,35 @@
             </a>
         </div>
     </div>
+
+    <script>
+        // Array of your background images (You can add up to 10 or more image URLs here)
+        const backgroundImages = [
+            "https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/Cosmos%20Genesis%20Logo%20With%20Black%20Circle%20BG.png",
+            "https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/Cosmos%20Genesis%20Logo%20With%20Black%20Circle%20BG.png",
+            "https://raw.githubusercontent.com/ali-kn-712/Cosmos-Genesis/main/Cosmos%20Genesis%20Logo%20With%20Black%20Circle%20BG.png"
+            // You can paste your 10 image URLs here inside quotes separated by comma
+        ];
+
+        const sliderContainer = document.getElementById('slider');
+        let currentIndex = 0;
+
+        // Create img elements for each background
+        backgroundImages.forEach((url, index) => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = `bg-slide ${index === 0 ? 'active' : ''}`;
+            sliderContainer.appendChild(img);
+        });
+
+        const slides = document.querySelectorAll('.bg-slide');
+
+        // Change slide every 5 seconds
+        setInterval(() => {
+            slides[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % slides.length;
+            slides[currentIndex].classList.add('active');
+        }, 5000);
+    </script>
 </body>
 </html>
