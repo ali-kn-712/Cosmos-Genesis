@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmos Genesis | Link Hub</title>
+    <title>Cosmos Genesis</title>
     <style>
         * {
             margin: 0;
@@ -13,162 +13,176 @@
         }
 
         body {
+            background-color: #0b0f19;
+            color: #ffffff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
             overflow-x: hidden;
-            color: #fff;
+            position: relative;
         }
 
-        /* Background Video */
-        .bg-video {
-            position: fixed;
-            right: 0;
-            bottom: 0;
-            min-width: 100%;
-            min-height: 100%;
-            object-fit: cover;
-            z-index: -2;
-        }
-
-        /* Dark overlay for better readability */
-        .overlay {
+        /* Background Video Styling */
+        #bg-video {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(4px);
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
             z-index: -1;
+            filter: brightness(0.4);
         }
 
-        /* Main container */
         .container {
             width: 100%;
-            max-width: 450px;
-            padding: 30px 20px;
+            max-width: 480px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 1;
         }
 
-        /* Header section (Logo & Name) */
-        .profile-header {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-
-        .profile-logo {
-            width: 90px;
-            height: 90px;
+        /* Logo Styling */
+        .logo-container {
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background: #111;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-            margin-bottom: 15px;
         }
 
-        .profile-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            color: #ffffff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Links list layout */
-        .links-container {
+        /* Links Card Styling */
+        .links-list {
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 15px;
         }
 
-        /* Individual link card styling */
         .link-card {
             display: flex;
             align-items: center;
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(12px);
-            padding: 14px 18px;
-            border-radius: 16px;
-            text-decoration: none;
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 50px;
             color: #ffffff;
+            text-decoration: none;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .link-card:hover {
             background: rgba(255, 255, 255, 0.18);
-            border-color: rgba(255, 255, 255, 0.4);
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
 
-        /* Card icon/logo */
-        .card-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
+        .link-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             object-fit: cover;
-            margin-right: 15px;
-            background: rgba(255, 255, 255, 0.1);
+            margin-left: 15px;
         }
 
-        /* Card title text */
-        .card-title {
-            font-size: 1.05rem;
-            font-weight: 500;
-            text-align: left;
+        .link-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-align: center;
             flex-grow: 1;
         }
     </style>
 </head>
 <body>
 
-    <!-- Background Video File -->
-    <video autoplay muted loop class="bg-video">
-        <source src="background.mp4" type="video/mp4">
-        Your browser does not support HTML5 video.
+    <!-- Background Video Element -->
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="" type="video/mp4">
+        مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
     </video>
-    
-    <div class="overlay"></div>
 
     <div class="container">
-        <!-- Header: Logo & Channel Name -->
-        <div class="profile-header">
-            <img src="main-logo.png" alt="Logo" class="profile-logo">
-            <h1 class="profile-name">Cosmos Genesis</h1>
+        <!-- Main Logo -->
+        <div class="logo-container">
+            <img id="main-logo" src="" alt="Cosmos Genesis Logo">
         </div>
 
-        <!-- Links Cards -->
-        <div class="links-container">
-            
-            <!-- Card 1 -->
-            <a href="https://youtube.com/@yourchannel" target="_blank" class="link-card">
-                <img src="icon1.png" alt="Icon" class="card-icon">
-                <span class="card-title">YouTube Channel</span>
-            </a>
-
-            <!-- Card 2 -->
-            <a href="https://t.me/yourchannel" target="_blank" class="link-card">
-                <img src="icon2.png" alt="Icon" class="card-icon">
-                <span class="card-title">Telegram Community</span>
-            </a>
-
-            <!-- Card 3 -->
-            <a href="https://instagram.com/yourhandle" target="_blank" class="link-card">
-                <img src="icon3.png" alt="Icon" class="card-icon">
-                <span class="card-title">Instagram Updates</span>
-            </a>
-
+        <!-- Dynamic Links List -->
+        <div id="links-container" class="links-list">
+            <!-- Links will be loaded dynamically from cloud -->
         </div>
     </div>
 
+    <script>
+        const BIN_ID = "6aae87cbac6210605adfc8fc";
+        const API_KEY = "$2a$10$Gd1pKq9Z6WI5F4uRk496UubcSkwJTAznwMcQEDYBgiSRCDyzaYLw";
+
+        async function loadSiteData() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: {
+                        "X-Master-Key": API_KEY
+                    }
+                });
+                const result = await response.json();
+                const data = result.record;
+
+                // Set Video Background
+                const videoElement = document.getElementById('bg-video');
+                const sourceElement = videoElement.querySelector('source');
+                if (data.bgVideo) {
+                    sourceElement.src = data.bgVideo;
+                    videoElement.load();
+                }
+
+                // Set Logo
+                if (data.logoUrl) {
+                    document.getElementById('main-logo').src = data.logoUrl;
+                }
+
+                // Render Links
+                const container = document.getElementById('links-container');
+                container.innerHTML = '';
+
+                if (data.links && Array.isArray(data.links)) {
+                    data.links.forEach(link => {
+                        const a = document.createElement('a');
+                        a.href = link.url;
+                        a.className = 'link-card';
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+
+                        a.innerHTML = `
+                            <img src="${link.icon}" alt="${link.title}" class="link-icon">
+                            <span class="link-title">${link.title}</span>
+                        `;
+                        container.appendChild(a);
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading data from cloud:", error);
+            }
+        }
+
+        // Load data on page start
+        loadSiteData();
+    </script>
 </body>
 </html>
