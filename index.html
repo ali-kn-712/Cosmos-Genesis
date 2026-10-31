@@ -1,9 +1,51 @@
-<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8">
+<!doctype html>
+<!-- ============================================================
+     COSMOS GENESIS — index.html  (replaces: /index.html)
+     The page content itself is built by js/app.js into <main id="app">.
+     This file only holds the fixed "shell": navigation, footer,
+     back-to-top button, viewer overlay and the glass-transparency control.
+     ============================================================ -->
+<html lang="en" data-theme="dark"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Cosmos Genesis</title>
+<meta name="theme-color" content="#07090d">
 <link rel="icon" id="fav" href="assets/brand/favicon.svg">
+<!-- FONTS -->
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;1,6..72,300&family=Inter:wght@400;500&display=swap">
+<!-- ALL STYLES live in this one file -->
 <link rel="stylesheet" href="css/styles.css"></head>
-<body><header id="nav" class="hide"></header><main id="app"></main><footer id="foot"></footer>
-<button id="top" aria-label="Back to top">↑</button><div id="overlay" class="ov" role="dialog" aria-modal="true"></div>
+<body>
+
+<!-- NAVIGATION BAR (filled in by app.js; it hides/shows while scrolling) -->
+<header id="nav" class="hide"></header>
+
+<!-- GLASS TRANSPARENCY CONTROL
+     A real 3-step control built from radio buttons. CSS reads which one is checked
+     (see "GLASS CONTROL" in styles.css) and changes the glass opacity/blur variables.
+     It must stay OUTSIDE #nav, because app.js rewrites everything inside #nav.
+     It sits right after #nav so CSS can hide/show it together with the bar. -->
+<div class="glass-ctl" role="radiogroup" aria-label="Glass transparency">
+  <span class="trk">
+    <input class="sr" type="radio" name="glass" id="gl-1" value="clear">
+    <label for="gl-1" title="Relatively transparent"><span class="sr">Relatively transparent</span></label>
+    <input class="sr" type="radio" name="glass" id="gl-2" value="balanced" checked>
+    <label for="gl-2" title="Balanced"><span class="sr">Balanced</span></label>
+    <input class="sr" type="radio" name="glass" id="gl-3" value="opaque">
+    <label for="gl-3" title="Relatively opaque"><span class="sr">Relatively opaque</span></label>
+  </span>
+  <span class="val" aria-hidden="true"></span>
+</div>
+
+<!-- MAIN PAGE CONTENT (filled in by app.js) -->
+<main id="app"></main>
+
+<!-- FOOTER (filled in by app.js from config/site.config.js) -->
+<footer id="foot"></footer>
+
+<!-- BACK TO TOP BUTTON -->
+<button id="top" aria-label="Back to top">↑</button>
+
+<!-- FULL-SCREEN VIEWER AND SEARCH OVERLAY -->
+<div id="overlay" class="ov" role="dialog" aria-modal="true"></div>
+
 <script type="module" src="js/app.js"></script></body></html>
