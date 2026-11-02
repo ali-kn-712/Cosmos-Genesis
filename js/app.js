@@ -251,7 +251,7 @@ async function adminMediaManager() {
   const load = async () => { try { render(await media.list()); } catch (error) { grid.textContent = error.message || "Unable to load media."; } };
   app.querySelector("#media-upload").onsubmit = async event => {
     event.preventDefault();
-    const form = event.currentTarget, button = form.querySelector("button"), files = [...form.files.files];
+    const form = event.currentTarget, button = form.querySelector("button"), files = [...form.elements.namedItem("files").files];
     if (!files.length) return;
     button.disabled = true; status.textContent = "Uploading…";
     const failures = [];
