@@ -1,5 +1,6 @@
 // Cosmos Genesis — UI. Reads ONLY from services/dataService.js and config/site.config.js.
 import { api } from "./services/dataService.js";
+import { auth } from "./services/authService.js";
 import { site } from "../config/site.config.js";
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const app = $("#app"), ov = $("#overlay"), nv = $("#nav");
@@ -173,12 +174,37 @@ const A = {
 };
 async function admin(tab = "dashboard") {
   if (!R[tab]) tab = "dashboard";
+  const session = await auth.session();
+  if (!session) {
+    app.innerHTML = `<section class="wrap pt" style="max-width:460px"><h1>Admin sign in</h1><p class="mut">Sign in with an authorized Cosmos Genesis account.</p><form id="admin-login" class="fields"><input name="email" type="email" autocomplete="username" placeholder="Email" required><input name="password" type="password" autocomplete="current-password" placeholder="Password" required><button class="btn">Sign in</button><p id="login-error" class="mut" role="status"></p></form></section>`;
+    $("#admin-login").onsubmit = async e => {
+      e.preventDefault();
+      const form = e.currentTarget, button = $("button", form), status = $("#login-error");
+      button.disabled = true; button.textContent = "Signing in…"; status.textContent = "";
+      try {
+        await auth.signIn(form.email.value.trim(), form.password.value);
+        await auth.requireStaff();
+        location.hash = "#/admin/dashboard";
+        await admin(tab);
+      } catch (error) {
+        status.textContent = error.message || "Unable to sign in.";
+        button.disabled = false; button.textContent = "Sign in";
+      }
+    };
+    return;
+  }
+  try { await auth.requireStaff(); }
+  catch (error) {
+    await auth.signOut();
+    app.innerHTML = `<section class="wrap pt"><h1>Access denied</h1><p class="mut">This account does not have staff permissions.</p><a class="btn" href="#/">Back to site</a></section>`;
+    return;
+  }
   demo ??= await (async () => { const [a, g, m, c, h] = await Promise.all([api.articles(), api.gallery(), api.missions(), api.comments(), api.home()]); return { a, g, m, c, feat: h.featuredMissionId, blocks: [{ type: "text", layout: "stacked" }, { type: "image", layout: "media-left" }, { type: "quote", layout: "stacked" }] }; })();
-  app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note"><b>DEMO MODE</b>: no backend and no sign-in. Changes live only in this tab and disappear on reload.</div><h2>${T[tab]}</h2><div id="ac">${R[tab]()}</div></div></div>`;
+  app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note">Signed in as ${session.user.email}. Article editing is being connected.</div><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h2>${T[tab]}</h2><button class="btn ghost" data-admin-logout>Sign out</button></div><div id="ac">${R[tab]()}</div></div></div>`;
   const redraw = () => { demo.rte = $(".rte")?.innerHTML ?? demo.rte; $("#ac").innerHTML = R[tab](); };
   const exec = (c, v) => { if (c === "createLink") { v = prompt("Link URL"); if (!v) return; } document.execCommand(c, false, c === "formatBlock" ? `<${v}>` : v); };
   app.onmousedown = e => { if (e.target.closest("button[data-cmd]")) e.preventDefault(); };
-  app.onclick = e => { const b = e.target.closest("button"); if (!b) return; const d = b.dataset; if (d.act) { demo.rte = $(".rte")?.innerHTML ?? demo.rte; A[d.act](+d.i); if (!["save", "pub2"].includes(d.act)) redraw(); } else if (d.cmd) exec(d.cmd); };
+  app.onclick = async e => { const b = e.target.closest("button"); if (!b) return; const d = b.dataset; if ("adminLogout" in d) { await auth.signOut(); location.hash = "#/admin"; return; } if (d.act) { demo.rte = $(".rte")?.innerHTML ?? demo.rte; A[d.act](+d.i); if (!["save", "pub2"].includes(d.act)) redraw(); } else if (d.cmd) exec(d.cmd); };
   app.onchange = e => { const t = e.target; if (t.dataset.cmd) exec(t.dataset.cmd, t.value); else if (t.dataset.lay !== undefined) demo.blocks[+t.dataset.lay].layout = t.value;
     else if (t.id === "up") { [...t.files].forEach(f => { const u = URL.createObjectURL(f), im = f.type.startsWith("image"); demo.g.unshift({ id: "u" + Date.now() + f.name, type: im ? "image" : "video", title: f.name, source: "Upload (demo)", year: new Date().getFullYear(), categories: [], src: im ? u : "", thumb: "" }); }); redraw(); } };
 }
