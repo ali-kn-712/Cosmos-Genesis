@@ -43,6 +43,23 @@ async function publishedArticles() {
   return (data || []).map(mapArticle);
 }
 
+async function publicEvents() {
+  const { data, error } = await supabase
+    .from("space_events")
+    .select("id, title, starts_at, description, image_media_id, sort_order")
+    .eq("is_published", true)
+    .order("sort_order", { ascending: true })
+    .order("starts_at", { ascending: true });
+  if (error) throw error;
+  return (data || []).map(row => ({
+    id: row.id,
+    title: row.title,
+    date: row.starts_at,
+    description: row.description || "",
+    image: ""
+  }));
+}
+
 async function articleDetail(slug) {
   const { data, error } = await supabase
     .from("v_article_detail")
@@ -72,7 +89,13 @@ export const api = {
   },
   missions: () => wait(missions),
   featuredMission: () => wait(missions.find(m => m.id === home.featuredMissionId)),
-  events: () => wait(events),
+  events: async () => {
+    try { return await publicEvents(); }
+    catch (error) {
+      console.warn("Supabase events unavailable; using local sample data.", error);
+      return wait(events);
+    }
+  },
   gallery: () => wait(gallery),
   categories: () => wait(categories),
   comments: () => wait(sampleComments),
