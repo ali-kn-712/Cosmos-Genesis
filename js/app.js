@@ -237,6 +237,25 @@ async function adminSpaceflightManager() {
   });
 }
 
+async function adminDashboard() {
+  app.innerHTML = `<section class="wrap pt"><h1>Dashboard</h1><p class="mut">Live counts from the connected content tables.</p><div data-dashboard-stats class="stats"><div><b>…</b><span class="mut">Loading articles</span></div><div><b>…</b><span class="mut">Loading events</span></div></div><p class="mut" data-dashboard-status role="status">Loading live records…</p><div class="blk" style="margin-top:1.5rem;flex-wrap:wrap"><a class="btn" href="#/admin/articles">Manage articles</a><a class="btn" href="#/admin/spaceflight">Manage events</a></div><p class="mut" style="margin-top:1.5rem">Missions, gallery, media, comments and settings are not connected to live database management yet.</p></section>`;
+  const status = app.querySelector("[data-dashboard-status]");
+  try {
+    const [articles, events] = await Promise.all([adminArticles.list(), adminEvents.list()]);
+    const stats = [
+      ["Articles", articles.length],
+      ["Published articles", articles.filter(row => row.status === "published").length],
+      ["Draft articles", articles.filter(row => row.status !== "published").length],
+      ["Events", events.length],
+      ["Published events", events.filter(row => row.is_published === true).length]
+    ];
+    app.querySelector("[data-dashboard-stats]").innerHTML = stats.map(([label, value]) => `<div><b>${value}</b><span class="mut">${label}</span></div>`).join("");
+    status.textContent = "Counts loaded successfully from Supabase.";
+  } catch (error) {
+    status.textContent = `Could not load live dashboard counts: ${error.message || "Unknown error"}`;
+  }
+}
+
 async function admin(tab = "dashboard") {
   if (!R[tab]) tab = "dashboard";
   const session = await auth.session();
@@ -266,8 +285,9 @@ async function admin(tab = "dashboard") {
   }
   if (tab === "articles" || tab === "editor") { await adminArticleManager(); return; }
   if (tab === "spaceflight") { await adminSpaceflightManager(); return; }
+  if (tab === "dashboard") { await adminDashboard(); return; }
   demo ??= await (async () => { const [a, g, m, c, h] = await Promise.all([api.articles(), api.gallery(), api.missions(), api.comments(), api.home()]); return { a, g, m, c, feat: h.featuredMissionId, blocks: [{ type: "text", layout: "stacked" }, { type: "image", layout: "media-left" }, { type: "quote", layout: "stacked" }] }; })();
-  app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note">Signed in as ${session.user.email}. Article editing is being connected.</div><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h2>${T[tab]}</h2><button class="btn ghost" data-admin-logout>Sign out</button></div><div id="ac">${R[tab]()}</div></div></div>`;
+  app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note">Signed in as ${session.user.email}. This section uses sample data and is not connected to live saving.</div><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h2>${T[tab]}</h2><button class="btn ghost" data-admin-logout>Sign out</button></div><div id="ac">${R[tab]()}</div></div></div>`;
   const redraw = () => { demo.rte = $(".rte")?.innerHTML ?? demo.rte; $("#ac").innerHTML = R[tab](); };
   const exec = (c, v) => { if (c === "createLink") { v = prompt("Link URL"); if (!v) return; } document.execCommand(c, false, c === "formatBlock" ? `<${v}>` : v); };
   app.onmousedown = e => { if (e.target.closest("button[data-cmd]")) e.preventDefault(); };
