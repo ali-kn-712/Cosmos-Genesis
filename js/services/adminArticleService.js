@@ -16,7 +16,7 @@ function normalizeArticle(input = {}) {
     category: String(input.category || "").trim() || null,
     author_name: String(input.author_name || "").trim() || null,
     published_on: input.published_on || null,
-    read_minutes: Number(input.read_minutes) || 0,
+    read_minutes: input.read_minutes === "" || input.read_minutes == null ? 0 : Number(input.read_minutes),
     cover_media_id: input.cover_media_id || null,
     status: input.status === "published" ? "published" : "draft",
     blocks: Array.isArray(input.blocks) ? input.blocks : [],
@@ -26,6 +26,15 @@ function normalizeArticle(input = {}) {
 
 const validateArticle = article => {
   if (!article.title || !article.slug) throw new Error("Article title and slug are required.");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(article.slug)) {
+    throw new Error("Slug must use lowercase English letters, numbers, and single hyphens.");
+  }
+  if (!Number.isInteger(article.read_minutes) || article.read_minutes < 0) {
+    throw new Error("Reading time must be a non-negative whole number.");
+  }
+  if (!Array.isArray(article.blocks) || !Array.isArray(article.refs)) {
+    throw new Error("Article blocks and references must be JSON arrays.");
+  }
 };
 
 export const adminArticles = createAdminCrudService({
