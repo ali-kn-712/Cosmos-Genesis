@@ -274,7 +274,7 @@ async function adminMediaManager() {
 }
 
 async function adminDashboard() {
-  app.innerHTML = `<section class="wrap pt"><h1>Dashboard</h1><p class="mut">Live counts from the connected content tables.</p><div data-dashboard-stats class="stats"><div><b>…</b><span class="mut">Loading articles</span></div><div><b>…</b><span class="mut">Loading events</span></div></div><p class="mut" data-dashboard-status role="status">Loading live records…</p><div class="blk" style="margin-top:1.5rem;flex-wrap:wrap"><a class="btn" href="#/admin/articles">Manage articles</a><a class="btn" href="#/admin/spaceflight">Manage events</a></div><p class="mut" style="margin-top:1.5rem">Missions, gallery, media, comments and settings are not connected to live database management yet.</p></section>`;
+  app.innerHTML = `<section class="wrap pt"><h1>Dashboard</h1><p class="mut">Live counts from the connected content tables.</p><div data-dashboard-stats class="stats"><div><b>…</b><span class="mut">Loading articles</span></div><div><b>…</b><span class="mut">Loading events</span></div></div><p class="mut" data-dashboard-status role="status">Loading live records…</p><div class="blk" style="margin-top:1.5rem;flex-wrap:wrap"><a class="btn" href="#/admin/articles">Manage articles</a><a class="btn" href="#/admin/spaceflight">Manage events</a><a class="btn" href="#/admin/media">Media library</a></div><p class="mut" style="margin-top:1.5rem">Missions, gallery, comments and settings still need their exact Supabase schema before safe live editing can be enabled.</p></section>`;
   const status = app.querySelector("[data-dashboard-status]");
   try {
     const [articles, events] = await Promise.all([adminArticles.list(), adminEvents.list()]);
