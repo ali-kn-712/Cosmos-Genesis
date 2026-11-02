@@ -3,6 +3,7 @@ import { api } from "./services/dataService.js";
 import { auth } from "./services/authService.js";
 import { adminArticles } from "./services/adminArticleService.js";
 import { adminEvents } from "./services/adminEventService.js";
+import { mountAdminCrud } from "./admin/adminCrudView.js";
 import { site } from "../config/site.config.js";
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const app = $("#app"), ov = $("#overlay"), nv = $("#nav");
@@ -175,126 +176,65 @@ const A = {
   save: () => toast("Demo mode: nothing was saved."), pub2: () => toast("Demo mode: nothing was published.")
 };
 async function adminArticleManager() {
-  const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-  let rows = [];
-  let editing = null;
-  const load = async () => { rows = await adminArticles.list(); paint(); };
-  const paint = () => {
-    app.innerHTML = `<section class="wrap pt"><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h1>Articles</h1><button class="btn" id="new-article">New article</button></div><div id="article-list" class="tw"><table><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody>${rows.map(a => `<tr><td>${esc(a.title)}</td><td>${esc(a.category)}</td><td>${esc(a.status)}</td><td>${esc(a.updated_at ? dt(a.updated_at,"UTC","d") : "—")}</td><td><button data-edit="${esc(a.id)}">Edit</button> <button data-delete="${esc(a.id)}">Delete</button></td></tr>`).join("") || '<tr><td colspan="5">No articles yet.</td></tr>'}</tbody></table></div><div id="article-editor"></div></section>`;
-  };
-  const editor = async id => {
-    editing = id || null;
-    const a = id ? rows.find(x => String(x.id) === String(id)) || await adminArticles.get(id) : {};
-    $("#article-editor").innerHTML = `<form id="article-form" class="fields" style="margin-top:2rem"><h2>${id ? "Edit article" : "New article"}</h2>
-      <input name="title" placeholder="Title" value="${esc(a.title)}" required>
-      <input name="slug" placeholder="slug" value="${esc(a.slug)}" required>
-      <input name="short_title" placeholder="Short title" value="${esc(a.short_title)}">
-      <input name="category" placeholder="Category" value="${esc(a.category)}">
-      <input name="author_name" placeholder="Author name" value="${esc(a.author_name)}">
-      <input name="published_on" type="date" value="${esc(a.published_on ? String(a.published_on).slice(0,10) : "")}">
-      <input name="read_minutes" type="number" min="0" placeholder="Reading time (minutes)" value="${esc(a.read_minutes)}">
-      <input name="cover_media_id" placeholder="Cover media ID" value="${esc(a.cover_media_id)}">
-      <textarea name="description" rows="3" placeholder="Description">${esc(a.description)}</textarea>
-      <label>Status <select name="status"><option value="draft" ${a.status !== "published" ? "selected" : ""}>Draft</option><option value="published" ${a.status === "published" ? "selected" : ""}>Published</option></select></label>
-      <label>Content blocks (JSON)<textarea name="blocks" rows="8">${esc(JSON.stringify(a.blocks || [], null, 2))}</textarea></label>
-      <label>References (JSON)<textarea name="refs" rows="5">${esc(JSON.stringify(a.refs || [], null, 2))}</textarea></label>
-      <div><button class="btn">${id ? "Save changes" : "Create draft"}</button> <button type="button" class="btn ghost" id="cancel-editor">Cancel</button></div><p id="article-error" role="status" class="mut"></p></form>`;
-    $("#article-form").onsubmit = async e => {
-      e.preventDefault();
-      const form = e.currentTarget, button = $("button[type=submit]", form) || $("button:not([type])", form), status = $("#article-error");
-      button.disabled = true; status.textContent = "Saving…";
-      try {
-        const value = name => form.elements[name].value;
-        const payload = {
-          title:value("title"), slug:value("slug"), short_title:value("short_title"),
-          category:value("category"), author_name:value("author_name"),
-          published_on:value("published_on") || null, read_minutes:value("read_minutes"),
-          cover_media_id:value("cover_media_id") || null, description:value("description"),
-          status:value("status"), blocks:JSON.parse(value("blocks") || "[]"),
-          refs:JSON.parse(value("refs") || "[]")
-        };
-        if (editing) await adminArticles.update(editing, payload);
-        else await adminArticles.create(payload);
-        await load();
-        $("#article-editor").innerHTML = '<p class="mut">Article saved successfully.</p>';
-      } catch (error) {
-        status.textContent = error.message || "Could not save article.";
-        button.disabled = false;
-      }
-    };
-    $("#cancel-editor").onclick = () => { $("#article-editor").innerHTML = ""; editing = null; };
-  };
-  app.onclick = async e => {
-    const b = e.target.closest("button"); if (!b) return;
-    try {
-      if (b.id === "new-article") await editor(null);
-      else if (b.dataset.edit) await editor(b.dataset.edit);
-      else if (b.dataset.delete && confirm("Permanently delete this article?")) { await adminArticles.remove(b.dataset.delete); await load(); }
-    } catch (error) { toast(error.message || "Request failed."); }
-  };
-  await load();
+  await mountAdminCrud({
+    root: app,
+    service: adminArticles,
+    title: "Articles",
+    singular: "article",
+    columns: [
+      { key: "title", label: "Title" },
+      { key: "category", label: "Category" },
+      { key: "status", label: "Status" },
+      { key: "updated_at", label: "Updated", render: value => value ? dt(value, "UTC", "d") : "—" }
+    ],
+    fields: [
+      { name: "title", label: "Title", required: true, placeholder: "Article title" },
+      { name: "slug", label: "Slug", required: true },
+      { name: "short_title", label: "Short title" },
+      { name: "category", label: "Category" },
+      { name: "author_name", label: "Author name" },
+      { name: "published_on", label: "Publication date", type: "date" },
+      { name: "read_minutes", label: "Reading time (minutes)", type: "number", min: 0, defaultValue: 0 },
+      { name: "cover_media_id", label: "Cover media UUID" },
+      { name: "description", label: "Description", type: "textarea", rows: 3 },
+      { name: "status", label: "Status", type: "select", defaultValue: "draft", options: [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }] },
+      { name: "blocks", label: "Content blocks (JSON)", type: "json", multiple: true, rows: 9 },
+      { name: "refs", label: "References (JSON)", type: "json", multiple: true, rows: 6 }
+    ],
+    toPayload: values => ({ ...values, read_minutes: Number(values.read_minutes) || 0, published_on: values.published_on || null, cover_media_id: values.cover_media_id || null })
+  });
 }
+
 async function adminSpaceflightManager() {
-  const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-  let rows = [], editing = null;
-  const load = async () => {
-    rows = await adminEvents.list();
-    paint();
-  };
-  const paint = () => {
-    app.innerHTML = `<section class="wrap pt">
-      <h1>Spaceflight</h1>
-      <p class="mut">Manage related space events shown on the public Spaceflight page.</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin:2rem 0 1rem"><h2>Events</h2><button class="btn" id="new-event">New event</button></div>
-      <div class="tw"><table><thead><tr><th>Title</th><th>Starts at</th><th>Published</th><th>Order</th><th></th></tr></thead><tbody>${rows.map(e => `<tr><td>${esc(e.title)}</td><td>${esc(e.starts_at ? dt(e.starts_at,"UTC") : "—")}</td><td>${e.is_published ? "Yes" : "No"}</td><td>${esc(e.sort_order)}</td><td><button data-event-edit="${esc(e.id)}">Edit</button> <button data-event-delete="${esc(e.id)}">Delete</button></td></tr>`).join("") || '<tr><td colspan="5">No events yet.</td></tr>'}</tbody></table></div>
-      <div id="event-editor"></div>
-    </section>`;
-  };
-  const editor = eventId => {
-    editing = eventId || null;
-    const e = eventId ? rows.find(x => String(x.id) === String(eventId)) : {};
-    const localDate = e?.starts_at ? new Date(e.starts_at).toISOString().slice(0,16) : "";
-    $("#event-editor").innerHTML = `<form id="event-form" class="fields" style="margin-top:2rem">
-      <h2>${eventId ? "Edit event" : "New event"}</h2>
-      <input name="title" placeholder="Event title" value="${esc(e?.title)}" required>
-      <label>Start date and time (UTC)<input name="starts_at" type="datetime-local" value="${esc(localDate)}"></label>
-      <input name="mission_id" placeholder="Related mission UUID (optional)" value="${esc(e?.mission_id)}">
-      <input name="image_media_id" placeholder="Image media UUID (optional)" value="${esc(e?.image_media_id)}">
-      <input name="sort_order" type="number" placeholder="Sort order" value="${esc(e?.sort_order ?? 0)}">
-      <textarea name="description" rows="4" placeholder="Description">${esc(e?.description)}</textarea>
-      <label><input name="is_published" type="checkbox" ${e?.is_published ? "checked" : ""}> Published</label>
-      <div><button class="btn">${eventId ? "Save changes" : "Create event"}</button> <button type="button" class="btn ghost" id="cancel-event">Cancel</button></div>
-      <p id="event-error" class="mut" role="status"></p>
-    </form>`;
-    $("#event-form").onsubmit = async ev => {
-      ev.preventDefault();
-      const form = ev.currentTarget, button = $("button[type=submit]", form) || $("button:not([type])", form);
-      const status = $("#event-error"); button.disabled = true; status.textContent = "Saving…";
-      try {
-        const value = name => form.elements[name].value;
-        const rawDate = value("starts_at");
-        const payload = {
-          title: value("title"), starts_at: rawDate ? new Date(rawDate + ":00Z").toISOString() : null,
-          mission_id: value("mission_id") || null, image_media_id: value("image_media_id") || null,
-          sort_order: value("sort_order"), description: value("description"),
-          is_published: form.elements.is_published.checked
-        };
-        if (editing) await adminEvents.update(editing, payload); else await adminEvents.create(payload);
-        await load();
-        $("#event-editor").innerHTML = '<p class="mut">Event saved.</p>';
-      } catch (error) { status.textContent = error.message || "Could not save event."; button.disabled = false; }
-    };
-    $("#cancel-event").onclick = () => { $("#event-editor").innerHTML = ""; editing = null; };
-  };
-  app.onclick = async ev => {
-    const b = ev.target.closest("button"); if (!b) return;
-    try {
-      if (b.id === "new-event") editor(null);
-      else if (b.dataset.eventEdit) editor(b.dataset.eventEdit);
-      else if (b.dataset.eventDelete && confirm("Permanently delete this event?")) { await adminEvents.remove(b.dataset.eventDelete); await load(); }
-    } catch (error) { toast(error.message || "Request failed."); }
-  };
-  await load();
+  await mountAdminCrud({
+    root: app,
+    service: adminEvents,
+    title: "Spaceflight · Events",
+    description: "Manage related space events shown on the public Spaceflight page.",
+    singular: "event",
+    columns: [
+      { key: "title", label: "Title" },
+      { key: "starts_at", label: "Starts at (UTC)", render: value => value ? dt(value, "UTC") : "—" },
+      { key: "is_published", label: "Published", render: value => value ? "Yes" : "No" },
+      { key: "sort_order", label: "Order" }
+    ],
+    fields: [
+      { name: "title", label: "Event title", required: true },
+      { name: "starts_at", label: "Start date and time (UTC)", type: "datetime-utc" },
+      { name: "mission_id", label: "Related mission UUID (optional)" },
+      { name: "image_media_id", label: "Image media UUID (optional)" },
+      { name: "sort_order", label: "Sort order", type: "number", defaultValue: 0 },
+      { name: "description", label: "Description", type: "textarea", rows: 4 },
+      { name: "is_published", label: "Published", type: "checkbox" }
+    ],
+    toPayload: values => ({
+      ...values,
+      starts_at: values.starts_at ? new Date(values.starts_at + ":00Z").toISOString() : null,
+      mission_id: values.mission_id || null,
+      image_media_id: values.image_media_id || null,
+      sort_order: Number(values.sort_order) || 0
+    })
+  });
 }
 
 async function admin(tab = "dashboard") {
