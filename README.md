@@ -1,35 +1,50 @@
 # Cosmos Genesis
 
-Static, build-free website (HTML + CSS + JS modules). Works on GitHub Pages as-is.
-**Run locally:** `python3 -m http.server` in this folder, then open http://localhost:8000 (opening index.html by double-click will not work, because browsers block ES modules on `file://`).
+Static, build-free website (HTML, CSS and JavaScript modules), hosted on GitHub Pages.
 
-## Easy edits (no programming needed)
-All routine changes are made on GitHub: open the file → click the ✏️ pencil → edit → **Commit changes**.
-Change only the text between quotes; keep commas, brackets and quotes.
+## Run locally
 
-1. **Replace the main logo** – upload a new file to `assets/logos/` named `logo.svg` (same name replaces it), or upload any name and set `logos.main` in `config/site.config.js`.
-2. **Light / dark logos** – `assets/logos/logo-dark.svg` is shown in dark mode (use a light-coloured logo); `assets/logos/logo-light.svg` is shown in light mode (use a dark-coloured logo). Same rule: replace the file or change `logos.dark` / `logos.light`. Favicon: `assets/brand/favicon.svg` (`logos.favicon`).
-3. **Navigation links** – `nav` in `config/site.config.js`. One line per link: `{ label: "Gallery", href: "#/gallery" }`. Button destinations are in `cta`.
-4. **Social media URLs** – `social` in the same file.
-5. **Footer and contact** – `footer` and `contact` in the same file.
-6. **Sample content** – `content/home.js` (hero video, featured article/mission/gallery picks), `content/articles.js`, `content/spaceflight.js`, `content/gallery.js`. Put images in `assets/images/` and use paths like `"assets/images/nebula.jpg"`. Empty `""` shows a generated placeholder. Items marked `placeholder: true` are **samples, not real data**. The Spaceflight hero background is `assets/images/spaceflight-hero.jpg`.
-7. **Featured mission** – change `featuredMissionId` in `content/home.js`. Home and Spaceflight hero both read that single record.
-8. **Publish** – commit to the `main` branch. In the repo: Settings → Pages → Deploy from branch → `main` / root. The site updates in about a minute.
+Run `python3 -m http.server` from the repository root and open `http://localhost:8000`. Opening `index.html` directly via `file://` will not work because the browser blocks ES modules.
 
-## Admin Panel (`#/admin`) – DEMO ONLY
-Visual, interactive prototype with sample data: dashboard, articles manager, article editor (rich-text toolbar, block add/reorder/remove), gallery manager, spaceflight manager, comments manager, media library, settings viewer.
-- **Not connected to any backend.** Nothing is saved; changes vanish on reload.
-- **No authentication.** There are no credentials in this code. Do not put real secrets in the frontend.
-- Comment moderation, publishing and uploads are simulated in memory only.
-- The public comment form does not store anything either.
+## Site configuration and content
 
-## Connecting Supabase later
-All data access goes through **`js/services/dataService.js`**; UI code never touches data sources directly.
-1. Create a Supabase project (PostgreSQL) with tables: `articles`, `article_blocks`, `media`, `missions`, `events`, `comments` (state: pending/approved/rejected), `profiles` (role).
-2. Enable Supabase Auth for administrators; add roles via `profiles.role` and Row Level Security policies (public read of published content only; writes for admins).
-3. Use Supabase Storage for images and video (`media` table stores URLs).
-4. Replace each function body in `dataService.js` with a Supabase query, and add write functions (create/update/delete) used by the admin screens. Only the public anon key belongs in the frontend; never the service-role key.
-5. Admin sign-in should use a dedicated, protected auth flow server-side (Supabase Auth), with credentials never sent through, or stored by, the comments table.
+- `config/site.config.js`: brand, logos, navigation, social links, contact and footer.
+- `content/home.js`: home hero and featured content.
+- `content/articles.js`: local fallback article samples.
+- `content/spaceflight.js`: local mission and event fallback samples.
+- `content/gallery.js`: local gallery fallback samples.
+- `assets/`: logos, images and other static assets.
 
-## Structure
-`config/` site settings · `content/` editable sample content · `js/services/` data layer · `js/app.js` pages + demo admin · `css/styles.css` · `assets/` logos, images, video.
+Routine text and link changes can be committed directly through GitHub's file editor. Keep the existing JavaScript syntax, quotes and commas intact.
+
+## Admin panel
+
+Open `#/admin`. Sign-in uses Supabase Auth; only profiles with the `admin` or `editor` role pass the staff check. Public sign-up is expected to remain disabled. Never put a Supabase service-role key in browser code.
+
+### Connected admin features
+
+- **Dashboard:** live article and Spaceflight event counts.
+- **Articles:** staff-only CRUD against `articles`.
+- **Spaceflight events:** staff-only CRUD against `space_events`.
+- **Media library:** staff-only listing, upload and deletion in the `site-media` Storage bucket. Images up to 12 MB and MP4/WebM/MOV videos up to 250 MB are accepted by the client.
+
+These features depend on the Supabase schema, RLS policies and Storage policies matching the SQL and service code in this branch. A successful code commit does not itself prove the live Supabase permissions or browser workflow have been tested.
+
+### Not yet connected to live admin CRUD
+
+Missions, gallery entries/categories, comments/moderation and website settings still use sample/local data or configuration. They must not be described as live editing until their actual database schema and RLS rules have been inspected and implemented.
+
+The public article and event reads use Supabase with local sample fallbacks when the backend query fails or has no published event rows. The public comment submission is currently a non-persistent placeholder.
+
+## Supabase setup files
+
+Run these from the Supabase SQL Editor in the staging project, reviewing the output/errors:
+
+1. `supabase/sql/storage-policies.sql` — staff-only access policies for the `site-media` bucket.
+2. `supabase/sql/inspect-content-schema.sql` — read-only schema, constraints, RLS policy and trigger inventory used to implement the remaining content sections safely.
+
+Do not run guessed migrations against production. Keep legacy R2 fields intact; the migration to Supabase Storage metadata should be designed after inspecting the real schema.
+
+## Deployment workflow
+
+The development branch is `supabase-integration`. Review and test its changes before merging to `main`. GitHub Pages should publish from `main` at the repository root, unless the repository's Pages settings specify otherwise.
