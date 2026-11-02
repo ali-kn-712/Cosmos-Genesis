@@ -262,3 +262,14 @@ footer{border-top:1px solid var(--line);padding:4rem 0 2rem;margin-top:4rem}
   *,*::before,*::after{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
   #app>section:not(.hero):not(.fh):not(.ahero)::before{opacity:1} /* static soft tint, no scroll fade */}
+
+/* ============ ADMIN MEDIA LIBRARY ============ */
+#media-upload{margin:1.5rem 0;padding:1rem;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel)}
+#media-upload button{justify-self:start}
+#media-status{grid-column:1/-1;overflow-wrap:anywhere}
+.agrid figure{min-width:0;margin:0;padding:.55rem;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel)}
+.agrid figure img,.agrid figure video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r-sm);background:#080b12}
+.agrid figcaption{padding:.55rem .15rem .15rem;font-size:.82rem;overflow-wrap:anywhere}
+.agrid figcaption small{display:block;margin:.35rem 0;word-break:break-all}
+.agrid figcaption button{margin:.2rem .25rem .1rem 0}
+#media-upload input[type=file]{min-width:0;max-width:100%}
