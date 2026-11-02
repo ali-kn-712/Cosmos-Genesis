@@ -3,6 +3,7 @@ import { api } from "./services/dataService.js";
 import { auth } from "./services/authService.js";
 import { adminArticles } from "./services/adminArticleService.js";
 import { adminEvents } from "./services/adminEventService.js";
+import { media } from "./services/mediaService.js";
 import { mountAdminCrud } from "./admin/adminCrudView.js";
 import { site } from "../config/site.config.js";
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -237,6 +238,41 @@ async function adminSpaceflightManager() {
   });
 }
 
+async function adminMediaManager() {
+  app.innerHTML = `<section class="wrap pt"><h1>Media library</h1><p class="mut">Upload and manage reusable images and videos in Supabase Storage.</p><form id="media-upload" class="fields"><input name="files" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm,video/quicktime" multiple required><button class="btn">Upload selected files</button><p class="mut" id="media-status" role="status"></p></form><div class="agrid" id="media-grid"><p class="mut">Loading media…</p></div></section>`;
+  const grid = app.querySelector("#media-grid"), status = app.querySelector("#media-status");
+  const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  const render = items => {
+    grid.innerHTML = items.length ? items.map(item => {
+      const video = /\\.(mp4|webm|mov)$/i.test(item.name);
+      return `<figure><a href="${escape(item.publicUrl)}" target="_blank" rel="noopener">${video ? `<video src="${escape(item.publicUrl)}" controls preload="metadata" style="width:100%;aspect-ratio:4/3;object-fit:cover"></video>` : `<img loading="lazy" src="${escape(item.publicUrl)}" alt="${escape(item.name)}">`}</a><figcaption>${escape(item.name)}<br><small class="mut">${escape(item.path)}</small><br><button class="btn-sm" data-media-copy="${escape(item.publicUrl)}">Copy URL</button> <button class="btn-sm" data-media-delete="${escape(item.path)}">Delete</button></figcaption></figure>`;
+    }).join("") : "<p class='mut'>No files uploaded yet.</p>";
+  };
+  const load = async () => { try { render(await media.list()); } catch (error) { grid.textContent = error.message || "Unable to load media."; } };
+  app.querySelector("#media-upload").onsubmit = async event => {
+    event.preventDefault();
+    const form = event.currentTarget, button = form.querySelector("button"), files = [...form.files.files];
+    if (!files.length) return;
+    button.disabled = true; status.textContent = "Uploading…";
+    const failures = [];
+    for (const file of files) { try { await media.upload(file); } catch (error) { failures.push(`${file.name}: ${error.message}`); } }
+    button.disabled = false; form.reset();
+    status.textContent = failures.length ? failures.join(" · ") : "All files uploaded successfully.";
+    await load();
+  };
+  grid.onclick = async event => {
+    const copy = event.target.closest("[data-media-copy]");
+    const remove = event.target.closest("[data-media-delete]");
+    if (copy) { try { await navigator.clipboard.writeText(copy.dataset.mediaCopy); status.textContent = "URL copied."; } catch { status.textContent = "Clipboard access was denied."; } }
+    if (remove && confirm("Permanently delete this file?")) {
+      remove.disabled = true;
+      try { await media.remove(remove.dataset.mediaDelete); status.textContent = "File deleted."; await load(); }
+      catch (error) { status.textContent = error.message || "Delete failed."; remove.disabled = false; }
+    }
+  };
+  await load();
+}
+
 async function adminDashboard() {
   app.innerHTML = `<section class="wrap pt"><h1>Dashboard</h1><p class="mut">Live counts from the connected content tables.</p><div data-dashboard-stats class="stats"><div><b>…</b><span class="mut">Loading articles</span></div><div><b>…</b><span class="mut">Loading events</span></div></div><p class="mut" data-dashboard-status role="status">Loading live records…</p><div class="blk" style="margin-top:1.5rem;flex-wrap:wrap"><a class="btn" href="#/admin/articles">Manage articles</a><a class="btn" href="#/admin/spaceflight">Manage events</a></div><p class="mut" style="margin-top:1.5rem">Missions, gallery, media, comments and settings are not connected to live database management yet.</p></section>`;
   const status = app.querySelector("[data-dashboard-status]");
@@ -286,6 +322,7 @@ async function admin(tab = "dashboard") {
   if (tab === "articles" || tab === "editor") { await adminArticleManager(); return; }
   if (tab === "spaceflight") { await adminSpaceflightManager(); return; }
   if (tab === "dashboard") { await adminDashboard(); return; }
+  if (tab === "media") { await adminMediaManager(); return; }
   demo ??= await (async () => { const [a, g, m, c, h] = await Promise.all([api.articles(), api.gallery(), api.missions(), api.comments(), api.home()]); return { a, g, m, c, feat: h.featuredMissionId, blocks: [{ type: "text", layout: "stacked" }, { type: "image", layout: "media-left" }, { type: "quote", layout: "stacked" }] }; })();
   app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note">Signed in as ${session.user.email}. This section uses sample data and is not connected to live saving.</div><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h2>${T[tab]}</h2><button class="btn ghost" data-admin-logout>Sign out</button></div><div id="ac">${R[tab]()}</div></div></div>`;
   const redraw = () => { demo.rte = $(".rte")?.innerHTML ?? demo.rte; $("#ac").innerHTML = R[tab](); };
