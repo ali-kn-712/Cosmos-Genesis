@@ -2,6 +2,7 @@
 import { api } from "./services/dataService.js";
 import { auth } from "./services/authService.js";
 import { adminArticles } from "./services/adminArticleService.js";
+import { adminEvents } from "./services/adminEventService.js";
 import { site } from "../config/site.config.js";
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const app = $("#app"), ov = $("#overlay"), nv = $("#nav");
@@ -233,6 +234,69 @@ async function adminArticleManager() {
   };
   await load();
 }
+async function adminSpaceflightManager() {
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+  let rows = [], editing = null;
+  const load = async () => {
+    rows = await adminEvents.list();
+    paint();
+  };
+  const paint = () => {
+    app.innerHTML = `<section class="wrap pt">
+      <h1>Spaceflight</h1>
+      <p class="mut">Manage related space events shown on the public Spaceflight page.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin:2rem 0 1rem"><h2>Events</h2><button class="btn" id="new-event">New event</button></div>
+      <div class="tw"><table><thead><tr><th>Title</th><th>Starts at</th><th>Published</th><th>Order</th><th></th></tr></thead><tbody>${rows.map(e => `<tr><td>${esc(e.title)}</td><td>${esc(e.starts_at ? dt(e.starts_at,"UTC") : "—")}</td><td>${e.is_published ? "Yes" : "No"}</td><td>${esc(e.sort_order)}</td><td><button data-event-edit="${esc(e.id)}">Edit</button> <button data-event-delete="${esc(e.id)}">Delete</button></td></tr>`).join("") || '<tr><td colspan="5">No events yet.</td></tr>'}</tbody></table></div>
+      <div id="event-editor"></div>
+    </section>`;
+  };
+  const editor = eventId => {
+    editing = eventId || null;
+    const e = eventId ? rows.find(x => String(x.id) === String(eventId)) : {};
+    const localDate = e?.starts_at ? new Date(e.starts_at).toISOString().slice(0,16) : "";
+    $("#event-editor").innerHTML = `<form id="event-form" class="fields" style="margin-top:2rem">
+      <h2>${eventId ? "Edit event" : "New event"}</h2>
+      <input name="title" placeholder="Event title" value="${esc(e?.title)}" required>
+      <label>Start date and time (UTC)<input name="starts_at" type="datetime-local" value="${esc(localDate)}"></label>
+      <input name="mission_id" placeholder="Related mission UUID (optional)" value="${esc(e?.mission_id)}">
+      <input name="image_media_id" placeholder="Image media UUID (optional)" value="${esc(e?.image_media_id)}">
+      <input name="sort_order" type="number" placeholder="Sort order" value="${esc(e?.sort_order ?? 0)}">
+      <textarea name="description" rows="4" placeholder="Description">${esc(e?.description)}</textarea>
+      <label><input name="is_published" type="checkbox" ${e?.is_published ? "checked" : ""}> Published</label>
+      <div><button class="btn">${eventId ? "Save changes" : "Create event"}</button> <button type="button" class="btn ghost" id="cancel-event">Cancel</button></div>
+      <p id="event-error" class="mut" role="status"></p>
+    </form>`;
+    $("#event-form").onsubmit = async ev => {
+      ev.preventDefault();
+      const form = ev.currentTarget, button = $("button[type=submit]", form) || $("button:not([type])", form);
+      const status = $("#event-error"); button.disabled = true; status.textContent = "Saving…";
+      try {
+        const value = name => form.elements[name].value;
+        const rawDate = value("starts_at");
+        const payload = {
+          title: value("title"), starts_at: rawDate ? new Date(rawDate + ":00Z").toISOString() : null,
+          mission_id: value("mission_id") || null, image_media_id: value("image_media_id") || null,
+          sort_order: value("sort_order"), description: value("description"),
+          is_published: form.elements.is_published.checked
+        };
+        if (editing) await adminEvents.update(editing, payload); else await adminEvents.create(payload);
+        await load();
+        $("#event-editor").innerHTML = '<p class="mut">Event saved.</p>';
+      } catch (error) { status.textContent = error.message || "Could not save event."; button.disabled = false; }
+    };
+    $("#cancel-event").onclick = () => { $("#event-editor").innerHTML = ""; editing = null; };
+  };
+  app.onclick = async ev => {
+    const b = ev.target.closest("button"); if (!b) return;
+    try {
+      if (b.id === "new-event") editor(null);
+      else if (b.dataset.eventEdit) editor(b.dataset.eventEdit);
+      else if (b.dataset.eventDelete && confirm("Permanently delete this event?")) { await adminEvents.remove(b.dataset.eventDelete); await load(); }
+    } catch (error) { toast(error.message || "Request failed."); }
+  };
+  await load();
+}
+
 async function admin(tab = "dashboard") {
   if (!R[tab]) tab = "dashboard";
   const session = await auth.session();
@@ -261,6 +325,7 @@ async function admin(tab = "dashboard") {
     return;
   }
   if (tab === "articles" || tab === "editor") { await adminArticleManager(); return; }
+  if (tab === "spaceflight") { await adminSpaceflightManager(); return; }
   demo ??= await (async () => { const [a, g, m, c, h] = await Promise.all([api.articles(), api.gallery(), api.missions(), api.comments(), api.home()]); return { a, g, m, c, feat: h.featuredMissionId, blocks: [{ type: "text", layout: "stacked" }, { type: "image", layout: "media-left" }, { type: "quote", layout: "stacked" }] }; })();
   app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note">Signed in as ${session.user.email}. Article editing is being connected.</div><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h2>${T[tab]}</h2><button class="btn ghost" data-admin-logout>Sign out</button></div><div id="ac">${R[tab]()}</div></div></div>`;
   const redraw = () => { demo.rte = $(".rte")?.innerHTML ?? demo.rte; $("#ac").innerHTML = R[tab](); };
