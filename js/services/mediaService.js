@@ -3,6 +3,9 @@ import { auth } from "./authService.js";
 
 const BUCKET = "site-media";
 const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 250 * 1024 * 1024;
+const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const MEDIA_TYPES = new Set([...IMAGE_TYPES, ...VIDEO_TYPES]);
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
 
 function safeName(name) {
