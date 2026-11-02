@@ -1,6 +1,7 @@
 // Cosmos Genesis — UI. Reads ONLY from services/dataService.js and config/site.config.js.
 import { api } from "./services/dataService.js";
 import { auth } from "./services/authService.js";
+import { adminArticles } from "./services/adminArticleService.js";
 import { site } from "../config/site.config.js";
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const app = $("#app"), ov = $("#overlay"), nv = $("#nav");
@@ -172,6 +173,66 @@ const A = {
   feat: i => demo.feat = demo.m[i].id, delm: i => { if (confirm("Delete this mission?")) demo.m.splice(i, 1); },
   save: () => toast("Demo mode: nothing was saved."), pub2: () => toast("Demo mode: nothing was published.")
 };
+async function adminArticleManager() {
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+  let rows = [];
+  let editing = null;
+  const load = async () => { rows = await adminArticles.list(); paint(); };
+  const paint = () => {
+    app.innerHTML = `<section class="wrap pt"><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h1>Articles</h1><button class="btn" id="new-article">New article</button></div><div id="article-list" class="tw"><table><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody>${rows.map(a => `<tr><td>${esc(a.title)}</td><td>${esc(a.category)}</td><td>${esc(a.status)}</td><td>${esc(a.updated_at ? dt(a.updated_at,"UTC","d") : "—")}</td><td><button data-edit="${esc(a.id)}">Edit</button> <button data-delete="${esc(a.id)}">Delete</button></td></tr>`).join("") || '<tr><td colspan="5">No articles yet.</td></tr>'}</tbody></table></div><div id="article-editor"></div></section>`;
+  };
+  const editor = async id => {
+    editing = id || null;
+    const a = id ? rows.find(x => String(x.id) === String(id)) || await adminArticles.get(id) : {};
+    $("#article-editor").innerHTML = `<form id="article-form" class="fields" style="margin-top:2rem"><h2>${id ? "Edit article" : "New article"}</h2>
+      <input name="title" placeholder="Title" value="${esc(a.title)}" required>
+      <input name="slug" placeholder="slug" value="${esc(a.slug)}" required>
+      <input name="short_title" placeholder="Short title" value="${esc(a.short_title)}">
+      <input name="category" placeholder="Category" value="${esc(a.category)}">
+      <input name="author_name" placeholder="Author name" value="${esc(a.author_name)}">
+      <input name="published_on" type="date" value="${esc(a.published_on ? String(a.published_on).slice(0,10) : "")}">
+      <input name="read_minutes" type="number" min="0" placeholder="Reading time (minutes)" value="${esc(a.read_minutes)}">
+      <input name="cover_media_id" placeholder="Cover media ID" value="${esc(a.cover_media_id)}">
+      <textarea name="description" rows="3" placeholder="Description">${esc(a.description)}</textarea>
+      <label>Status <select name="status"><option value="draft" ${a.status !== "published" ? "selected" : ""}>Draft</option><option value="published" ${a.status === "published" ? "selected" : ""}>Published</option></select></label>
+      <label>Content blocks (JSON)<textarea name="blocks" rows="8">${esc(JSON.stringify(a.blocks || [], null, 2))}</textarea></label>
+      <label>References (JSON)<textarea name="refs" rows="5">${esc(JSON.stringify(a.refs || [], null, 2))}</textarea></label>
+      <div><button class="btn">${id ? "Save changes" : "Create draft"}</button> <button type="button" class="btn ghost" id="cancel-editor">Cancel</button></div><p id="article-error" role="status" class="mut"></p></form>`;
+    $("#article-form").onsubmit = async e => {
+      e.preventDefault();
+      const form = e.currentTarget, button = $("button[type=submit]", form) || $("button:not([type])", form), status = $("#article-error");
+      button.disabled = true; status.textContent = "Saving…";
+      try {
+        const value = name => form.elements[name].value;
+        const payload = {
+          title:value("title"), slug:value("slug"), short_title:value("short_title"),
+          category:value("category"), author_name:value("author_name"),
+          published_on:value("published_on") || null, read_minutes:value("read_minutes"),
+          cover_media_id:value("cover_media_id") || null, description:value("description"),
+          status:value("status"), blocks:JSON.parse(value("blocks") || "[]"),
+          refs:JSON.parse(value("refs") || "[]")
+        };
+        if (editing) await adminArticles.update(editing, payload);
+        else await adminArticles.create(payload);
+        await load();
+        $("#article-editor").innerHTML = '<p class="mut">Article saved successfully.</p>';
+      } catch (error) {
+        status.textContent = error.message || "Could not save article.";
+        button.disabled = false;
+      }
+    };
+    $("#cancel-editor").onclick = () => { $("#article-editor").innerHTML = ""; editing = null; };
+  };
+  app.onclick = async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    try {
+      if (b.id === "new-article") await editor(null);
+      else if (b.dataset.edit) await editor(b.dataset.edit);
+      else if (b.dataset.delete && confirm("Permanently delete this article?")) { await adminArticles.remove(b.dataset.delete); await load(); }
+    } catch (error) { toast(error.message || "Request failed."); }
+  };
+  await load();
+}
 async function admin(tab = "dashboard") {
   if (!R[tab]) tab = "dashboard";
   const session = await auth.session();
@@ -199,6 +260,7 @@ async function admin(tab = "dashboard") {
     app.innerHTML = `<section class="wrap pt"><h1>Access denied</h1><p class="mut">This account does not have staff permissions.</p><a class="btn" href="#/">Back to site</a></section>`;
     return;
   }
+  if (tab === "articles" || tab === "editor") { await adminArticleManager(); return; }
   demo ??= await (async () => { const [a, g, m, c, h] = await Promise.all([api.articles(), api.gallery(), api.missions(), api.comments(), api.home()]); return { a, g, m, c, feat: h.featuredMissionId, blocks: [{ type: "text", layout: "stacked" }, { type: "image", layout: "media-left" }, { type: "quote", layout: "stacked" }] }; })();
   app.innerHTML = `<div class="ad"><aside class="as" aria-label="Admin sections">${Object.entries(T).map(([k, v]) => `<a class="${k === tab ? "on" : ""}" href="#/admin/${k}">${v}</a>`).join("")}</aside><div class="ac"><div class="demo" role="note">Signed in as ${session.user.email}. Article editing is being connected.</div><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h2>${T[tab]}</h2><button class="btn ghost" data-admin-logout>Sign out</button></div><div id="ac">${R[tab]()}</div></div></div>`;
   const redraw = () => { demo.rte = $(".rte")?.innerHTML ?? demo.rte; $("#ac").innerHTML = R[tab](); };
