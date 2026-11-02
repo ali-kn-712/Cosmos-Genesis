@@ -40,6 +40,17 @@ export async function mountAdminCrud({
   let editingId = null;
   const listRoot = () => root.querySelector("[data-crud-list]");
   const formRoot = () => root.querySelector("[data-crud-form]");
+  const notifyError = message => {
+    let notice = root.querySelector("[data-crud-notice]");
+    if (!notice) {
+      notice = document.createElement("p");
+      notice.dataset.crudNotice = "";
+      notice.className = "mut";
+      notice.setAttribute("role", "alert");
+      root.querySelector("section")?.prepend(notice);
+    }
+    if (notice) notice.textContent = message;
+  };
 
   const paint = () => {
     const headers = columns.map(column => `<th>${column.label}</th>`).join("");
@@ -72,7 +83,7 @@ export async function mountAdminCrud({
         await service.remove(button.dataset.crudDelete);
         rows = await service.list(); paint(); formRoot().innerHTML = "";
       }
-    } catch (error) { toast(error.message || "Request failed."); }
+    } catch (error) { notifyError(error.message || "Request failed."); }
   };
 
   root.onsubmit = async event => {
@@ -94,7 +105,7 @@ export async function mountAdminCrud({
       if (editingId) await service.update(editingId, payload);
       else await service.create(payload);
       rows = await service.list(); paint(); formRoot().innerHTML = "";
-      listRoot().insertAdjacentHTML("beforebegin", `<p class="mut" role="status">${esc(singular)} saved successfully.</p>`);
+      notifyError(`${singular} saved successfully.`);
     } catch (error) {
       status.textContent = error.message || "Could not save record.";
       button.disabled = false;
