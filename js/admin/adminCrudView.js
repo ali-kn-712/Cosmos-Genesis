@@ -94,7 +94,7 @@ export async function mountAdminCrud({
       if (editingId) await service.update(editingId, payload);
       else await service.create(payload);
       rows = await service.list(); paint(); formRoot().innerHTML = "";
-      toast(`${singular} saved.`);
+      listRoot().insertAdjacentHTML("beforebegin", `<p class="mut" role="status">${esc(singular)} saved successfully.</p>`);
     } catch (error) {
       status.textContent = error.message || "Could not save record.";
       button.disabled = false;
