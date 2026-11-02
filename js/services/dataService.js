@@ -51,7 +51,8 @@ async function publicEvents() {
     .order("sort_order", { ascending: true })
     .order("starts_at", { ascending: true });
   if (error) throw error;
-  return (data || []).map(row => ({
+  if (!data?.length) return events;
+  return data.map(row => ({
     id: row.id,
     title: row.title,
     date: row.starts_at,
